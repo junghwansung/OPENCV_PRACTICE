@@ -13,6 +13,8 @@ void on_mouse(int _event, int _x, int _y, int _flag, void* _data);
 
 void on_brightness(int _pos, void* _data);
 
+int StitchImages(const InputArray& _imgs);
+
 int main()
 {
 	cout << "Hello, OpenCV" << CV_VERSION << endl;
@@ -65,7 +67,7 @@ int main()
 	cout << "height : " << cat_img.rows << ", width : " << cat_img.cols << endl;
 	cout << "channels : " << cat_img.channels() << endl;
 
-	// 그리기
+	// Draw
 	line(cat_img, Point(50, 50), Point(200, 50), Scalar(0, 0, 255));
 	line(cat_img, Point(50, 100), Point(200, 100), Scalar(255, 0, 255), 3);
 	line(cat_img, Point(50, 150), Point(200, 150), Scalar(255, 0, 0), 10);
@@ -73,7 +75,7 @@ int main()
 	MOUSE_DATA user_data;
 	user_data._img = cat_img;
 
-	// 마우스
+	// Mouse Event
 	namedWindow("cat");
 	setMouseCallback("cat", on_mouse, (void*)(&user_data));
 
@@ -81,7 +83,7 @@ int main()
 	//cv::imshow("cat_ext", ext_img);
 	//cv::imshow("row img", row_img);
 
-	// 키보드
+	// Keyboard 
 	while (true)
 	{
 		int key_type = cv::waitKey();
@@ -91,7 +93,7 @@ int main()
 	*/
 	
 
-	Mat src = cv::imread("lenna.bmp", IMREAD_GRAYSCALE);
+	/*Mat src = cv::imread("lenna.bmp", IMREAD_GRAYSCALE);
 	if (src.empty())
 	{
 		cerr << "failed to read image" << endl;
@@ -103,7 +105,24 @@ int main()
 	on_brightness(0, (void*)(&src));
 
 	cv::waitKey();
-	cv::destroyAllWindows();
+	cv::destroyAllWindows();*/
+
+	vector<cv::String> file_dirs = {"img1.jpg", "img2.jpg", "img3.jpg"};
+	vector<cv::Mat> imgs;
+	for_each(file_dirs.begin(), file_dirs.end(), [&imgs](const cv::String& _dir) {
+		cv::Mat img = imread(_dir);
+		if (!img.empty()) 
+			imgs.push_back(img);
+		});
+
+	if (imgs.size() < 2)
+	{
+		cerr << "not enough to stitch images" << endl;
+		return -1;
+	}
+
+	StitchImages(imgs);
+
 	return 0;
 }
 
@@ -146,4 +165,24 @@ void on_brightness(int _pos, void* _data)
 	Mat dst_img = *src_img + _pos;
 
 	imshow("brightness", dst_img);
+}
+
+int StitchImages(const InputArray& _imgs)
+{
+	Ptr<Stitcher> stitcher = Stitcher::create();
+
+	Mat dst;
+	Stitcher::Status status = stitcher->stitch(_imgs, dst);
+
+	if (status != Stitcher::Status::OK) {
+		cerr << "Error on stitching!" << endl;
+		return -1;
+	}
+
+	imwrite("result.jpg", dst);
+
+	imshow("dst", dst);
+
+	waitKey();
+	return 0;
 }
