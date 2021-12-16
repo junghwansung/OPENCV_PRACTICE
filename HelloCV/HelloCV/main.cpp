@@ -109,6 +109,7 @@ int main()
 
 	vector<cv::String> file_dirs = {"img1.jpg", "img2.jpg", "img3.jpg"};
 	vector<cv::Mat> imgs;
+
 	for_each(file_dirs.begin(), file_dirs.end(), [&imgs](const cv::String& _dir) {
 		cv::Mat img = imread(_dir);
 		if (!img.empty()) 
